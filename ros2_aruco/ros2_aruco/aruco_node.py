@@ -164,6 +164,9 @@ class ArucoNode(rclpy.node.Node):
             return
 
         cv_image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+
+        # Debug image properties
+        self.get_logger().info(f"Image dimensions: {cv_image.shape}")
         markers = ArucoMarkers()
         pose_array = PoseArray()
         if self.camera_frame == "":
@@ -179,6 +182,7 @@ class ArucoNode(rclpy.node.Node):
         corners, marker_ids, rejected = self.detector.detectMarkers(cv_image)
 
         if marker_ids is not None:
+            self.get_logger().info(f"Markers detected: {marker_ids}")
             if cv2.__version__ > "4.0.0":
                 rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
                     corners, self.marker_size, self.intrinsic_mat, self.distortion
@@ -208,7 +212,8 @@ class ArucoNode(rclpy.node.Node):
 
             self.poses_pub.publish(pose_array)
             self.markers_pub.publish(markers)
-
+        else:
+            self.get_logger().warn("No markers detected in the camera image")
 
 def main():
     rclpy.init()
